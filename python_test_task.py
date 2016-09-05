@@ -21,7 +21,7 @@ def retrieve_item(url):
 
 
 def parse_csv(filename):
-    """Open csv stats file, and filter out needed data to th queue"""
+    """Open csv stats file, and filter out needed data to the queue"""
     with open(filename) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
@@ -50,25 +50,21 @@ def main_loop():
     while True:
         message = q.get()
         if message:
-            ids, cost = message
             try:
+                ids, cost = message
                 _, env, farm, farm_role, server = ids.split(':')
                 keys = zip(types, (env, farm, farm_role, server))
                 cost = float(cost)
             except:
-                # Ignoring malformed rows
-                continue
-            for key in keys:
+                continue  # Ignoring malformed rows
+            for key in keys:  # key = (object_type, object_id)
                 if key in rows:
                     rows[key] += cost
                 else:
                     rows[key] = cost
         # Writing data to db and exiting if there is None at task queue
         else:
-            items = []
-            # Converting from dict to list of tuples to use executemany
-            for k, v in rows.items():
-                items.append(k + (v,))
+            items = (k + (v,) for k, v in rows.items())  # Generate insert values from rows
             try:
                 with sqlite3.connect('data.db') as conn:
                     conn.execute('create table costs (object_type text, object_id varchar(32), cost float)')
