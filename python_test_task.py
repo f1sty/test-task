@@ -1,10 +1,10 @@
 import threading
 import zipfile
 import sys
-import urllib.request
 import sqlite3
 import os
 from csv import DictReader
+from urllib.request import urlretrieve
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 
@@ -14,7 +14,7 @@ q = Queue()  # Main task queue
 
 def retrieve_item(url):
     """Download stats file, unzip and pass it to the csv parser"""
-    filename, _headers = urllib.request.urlretrieve(url)
+    filename, _headers = urlretrieve(url)
     files = unzip(filename)
     for datafile in files:
         parse_csv(datafile)
