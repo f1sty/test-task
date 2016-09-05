@@ -9,11 +9,11 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 
 
-q = Queue()  # main task queue
+q = Queue()  # Main task queue
 
 
 def retrieve_item(url):
-    """Downloads stats file, unzip and pass it to the """
+    """Download stats file, unzip and pass it to the csv parser"""
     filename, _headers = urllib.request.urlretrieve(url)
     files = unzip(filename)
     for datafile in files:
@@ -21,6 +21,7 @@ def retrieve_item(url):
 
 
 def parse_csv(filename):
+    """Open csv stats file, and filter out needed data to th queue"""
     with open(filename) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
