@@ -9,16 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 
 
-q = Queue()
-
-
-def retrieve_file(url):
-    filename, _headers = urllib.request.urlretrieve(url)
-    return unzip(filename)
+q = Queue()  # main task queue
 
 
 def retrieve_item(url):
-    files = retrieve_file(url)
+    """Downloads stats file, unzip and pass it to the """
+    filename, _headers = urllib.request.urlretrieve(url)
+    files = unzip(filename)
     for datafile in files:
         parse_csv(datafile)
 
@@ -27,9 +24,9 @@ def parse_csv(filename):
     with open(filename) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
-            if all(row['user:scalr-meta'].split(':')):
+            if all(row['user:scalr-meta'].split(':')) and row['user:scalr-meta'].startswith('v1:'):
                 q.put([row['user:scalr-meta'], row['Cost']])
-    os.remove(filename)
+    os.remove(filename)  # Clean-up
 
 
 def run(urls):
@@ -46,8 +43,9 @@ def run(urls):
 
 
 def main_loop():
-    rows = {}
-    types = ('env', 'farm', 'farm_role', 'server')
+    """Consumer thread loop"""
+    rows = {}  # Store items here
+    types = ('env', 'farm', 'farm_role', 'server')  # object_types
     while True:
         message = q.get()
         if message:
@@ -57,14 +55,17 @@ def main_loop():
                 keys = zip(types, (env, farm, farm_role, server))
                 cost = float(cost)
             except:
+                # Ignoring malformed rows
                 continue
             for key in keys:
                 if key in rows:
                     rows[key] += cost
                 else:
                     rows[key] = cost
+        # Writing data to db and exiting if there is None at task queue
         else:
             items = []
+            # Converting from dict to list of tuples to use executemany
             for k, v in rows.items():
                 items.append(k + (v,))
             try:
@@ -80,12 +81,11 @@ def main_loop():
 def unzip(filename):
     with zipfile.ZipFile(filename) as zf:
         zf.extractall()
-    os.remove(filename)
+    os.remove(filename)  # Clean-up
     return zf.namelist()
 
 
 def main():
-
     urls = []
 
     if len(sys.argv) == 2:
