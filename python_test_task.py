@@ -64,7 +64,7 @@ def main_loop():
                     rows[key] = cost
         # Writing data to db and exiting if there is None at task queue
         else:
-            items = items_gen(rows)  # Generate insert values from rows
+            items = items_gen(rows)  # Create insert values generator from rows
             try:
                 with sqlite3.connect('data.db') as conn:
                     conn.execute('create table costs (object_type text, object_id varchar(32), cost float)')
