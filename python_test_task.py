@@ -50,13 +50,10 @@ def main_loop():
     while True:
         message = q.get()
         if message:
-            try:
-                ids, cost = message
-                _, env, farm, farm_role, server = ids.split(':')
-                keys = zip(types, (env, farm, farm_role, server))
-                cost = float(cost)
-            except:
-                continue  # Ignoring malformed rows
+            ids, cost = message
+            _, *payload = ids.split(':')
+            keys = zip(types, payload)
+            cost = float(cost)
             for key in keys:  # key = (object_type, object_id)
                 if key in rows:
                     rows[key] += cost
