@@ -64,7 +64,7 @@ def main_loop():
                     rows[key] = cost
         # Writing data to db and exiting if there is None at task queue
         else:
-            items = (k + (v,) for k, v in rows.items())  # Generate insert values from rows
+            items = items_gen(rows)  # Generate insert values from rows
             try:
                 with sqlite3.connect('data.db') as conn:
                     conn.execute('create table costs (object_type text, object_id varchar(32), cost float)')
@@ -80,6 +80,12 @@ def unzip(filename):
         zf.extractall()
     os.remove(filename)  # Clean-up
     return zf.namelist()
+
+
+def items_gen(dct):
+    while dct:
+        k, v = dct.popitem()
+        yield k + (v,)
 
 
 def main():
