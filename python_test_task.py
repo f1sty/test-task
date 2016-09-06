@@ -55,10 +55,7 @@ def main_loop():
             keys = zip(types, payload)
             cost = float(cost)
             for key in keys:  # key = (object_type, object_id)
-                if key in rows:
-                    rows[key] += cost
-                else:
-                    rows[key] = cost
+                rows[key] = rows[key] + cost if key in rows else cost
         # Writing data to db and exiting if there is None at task queue
         else:
             items = items_gen(rows)  # Create insert values generator from rows
